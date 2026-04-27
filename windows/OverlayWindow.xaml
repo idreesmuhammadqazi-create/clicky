@@ -1,0 +1,49 @@
+<Window x:Class="ClickyWindows.OverlayWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        Title="Overlay"
+        WindowStyle="None"
+        AllowsTransparency="True"
+        Background="Transparent"
+        ShowInTaskbar="False"
+        Topmost="True"
+        ResizeMode="NoResize">
+    <Grid>
+        <!-- Blue cursor circle -->
+        <Ellipse x:Name="CursorEllipse"
+                 Width="20"
+                 Height="20"
+                 Fill="#007BFF"
+                 Opacity="0.8"
+                 HorizontalAlignment="Left"
+                 VerticalAlignment="Top"
+                 Margin="0,0,0,0"/>
+
+        <!-- Response text bubble -->
+        <Border x:Name="ResponseBorder"
+                Background="#1a1a1a"
+                CornerRadius="10"
+                BorderBrush="#333"
+                BorderThickness="1"
+                Padding="10"
+                HorizontalAlignment="Left"
+                VerticalAlignment="Top"
+                Margin="30,10,0,0"
+                Visibility="Collapsed">
+            <TextBlock x:Name="ResponseTextBlock"
+                       Foreground="White"
+                       FontSize="14"
+                       TextWrapping="Wrap"
+                       MaxWidth="400"/>
+        </Border>
+
+        <!-- Waveform -->
+        <Canvas x:Name="WaveformCanvas"
+                HorizontalAlignment="Left"
+                VerticalAlignment="Top"
+                Margin="30,60,0,0"
+                Height="20"
+                Width="200"
+                Visibility="Collapsed"/>
+    </Grid>
+</Window>
