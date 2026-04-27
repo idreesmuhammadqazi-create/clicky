@@ -11,6 +11,11 @@ public partial class App : Application
     private CompanionPanel? _companionPanel;
     private GlobalHotkeyMonitor? _hotkeyMonitor;
     private AudioCaptureManager? _audioCapture;
+    private CompanionManager? _companionManager;
+    private OverlayWindow? _overlay;
+    private ClaudeAPI? _claudeApi;
+    private ElevenLabsTTSClient? _ttsClient;
+    private ITranscriptionProvider? _transcriptionProvider;
 
     protected override void OnStartup(StartupEventArgs e)
     {
@@ -37,36 +42,36 @@ public partial class App : Application
         // Handle single click to show panel
         _notifyIcon.Click += (s, args) => ShowPanel();
 
-        // Set up global hotkey monitor
-        _hotkeyMonitor = new GlobalHotkeyMonitor();
-        _hotkeyMonitor.HotkeyPressed += OnHotkeyPressed;
-        _hotkeyMonitor.HotkeyReleased += OnHotkeyReleased;
+        // Check permissions
+        PermissionManager.EnsurePermissions();
 
-        // Set up audio capture
+        // Register for startup
+        StartupManager.RegisterForStartup();
+
+        // Set up components
+        _hotkeyMonitor = new GlobalHotkeyMonitor();
         _audioCapture = new AudioCaptureManager();
-        _audioCapture.AudioDataAvailable += OnAudioDataAvailable;
+        _overlay = new OverlayWindow();
+        _claudeApi = new ClaudeAPI("https://your-worker-name.your-subdomain.workers.dev/chat", "claude-sonnet-4-6");
+        _ttsClient = new ElevenLabsTTSClient("https://your-worker-name.your-subdomain.workers.dev/tts");
+
+        // Choose transcription provider
+        _transcriptionProvider = new OpenAIAudioTranscriptionProvider(); // or WindowsSpeechTranscriptionProvider
+
+        _companionPanel = new CompanionPanel();
+
+        // Set up companion manager
+        _companionManager = new CompanionManager(
+            _hotkeyMonitor,
+            _audioCapture,
+            _transcriptionProvider,
+            _claudeApi,
+            _ttsClient,
+            _overlay,
+            _companionPanel);
 
         // Set shutdown mode to explicit
         this.ShutdownMode = ShutdownMode.OnExplicitShutdown;
-    }
-
-    private void OnHotkeyPressed(object? sender, EventArgs e)
-    {
-        // Start voice recording
-        _audioCapture?.StartRecording();
-        // TODO: Update UI status
-    }
-
-    private void OnHotkeyReleased(object? sender, EventArgs e)
-    {
-        // Stop voice recording and process
-        _audioCapture?.StopRecording();
-        // TODO: Send to transcription
-    }
-
-    private void OnAudioDataAvailable(object? sender, byte[] audioData)
-    {
-        // TODO: Process audio data in real-time if needed
     }
 
     private void ShowPanel()
@@ -74,7 +79,6 @@ public partial class App : Application
         if (_companionPanel == null)
         {
             _companionPanel = new CompanionPanel();
-            _companionPanel.Closed += (s, args) => _companionPanel = null;
         }
         _companionPanel.Show();
         _companionPanel.Activate();
@@ -82,6 +86,8 @@ public partial class App : Application
 
     protected override void OnExit(ExitEventArgs e)
     {
+        _companionManager = null;
+        _overlay?.Close();
         _audioCapture?.Dispose();
         _hotkeyMonitor?.Dispose();
         _notifyIcon?.Dispose();
